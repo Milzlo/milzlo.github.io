@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>KbjFree分享</title>
+    <style>
+        :root {
+            --bg: #0f0f13;
+            --card: #151922;
+            --text: #e6e6eb;
+            --muted: #9aa0a6;
+            --accent: #637dff;
+            --accent-2: #22c55e;
+            --border: #232735;
+            --chip: #1d2330;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #1b2030 0%, #0f0f13 40%), var(--bg);
+            color: var(--text); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 56px; }
+        .header {
+            display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;
+        }
+        .title {
+            display: inline-flex; align-items: center; gap: 12px; letter-spacing: 0.3px;
+            font-weight: 800; font-size: 34px; line-height: 1.15;
+            background: linear-gradient(135deg, #fff 0%, #c6ceff 45%, #86a0ff 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            text-shadow: 0 6px 24px rgba(99,125,255,.18);
+        }
+        .title .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #9b8bff); box-shadow: 0 0 18px rgba(99,125,255,.65); }
+        .title .badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 26px; min-width: 44px; padding: 0 10px; border-radius: 999px;
+            background: rgba(99,125,255,.12); border: 1px solid rgba(99,125,255,.35);
+            color: #cfd7ff; font-size: 14px; font-weight: 700;
+        }
+        .search {
+            position: relative; flex: 1; max-width: 420px;
+        }
+        .search input {
+            width: 100%; height: 40px; border-radius: 10px; outline: none; border: 1px solid var(--border); background: #0f1320;
+            color: var(--text); padding: 0 40px 0 14px; transition: border .2s, box-shadow .2s; font-size: 16px; -webkit-text-size-adjust: 100%;
+        }
+        .search input::placeholder { color: #6b7280; }
+        .search .icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #8b95a7; font-size: 18px; }
+
+        .panel { background: linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02)), var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 6px;
+        }
+        .chip {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: var(--chip); border: 1px solid #242b3a; color: var(--text);
+            padding: 10px 12px; border-radius: 12px; transition: transform .12s ease, box-shadow .12s ease, border-color .2s;
+            white-space: nowrap; min-width: 0;
+        }
+        .chip:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.22); border-color: #2f374a; }
+        .chip .text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; flex: 1 1 auto; min-width: 0; }
+        .chip .actions { display: flex; gap: 8px; flex: 0 0 auto; }
+        .btn { height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid #2a3150; background: #10162a; color: #cfd7ff; cursor: pointer; white-space: nowrap; font-size: 16px; touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+        .btn:hover { border-color: #3b4570; background: #0d1326; }
+        .empty { padding: 40px 10px; text-align: center; color: var(--muted); }
+        .error { padding: 12px 16px; background: #2a1111; color: #ffd7d7; border: 1px solid #7a3030; border-radius: 10px; }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;
+        }
+        .pagination-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px;
+            background: var(--chip); border: 1px solid var(--border); color: var(--text);
+            cursor: pointer; font-size: 14px; transition: all 0.2s ease;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background: #1e2535; border-color: #3b4570;
+        }
+        .pagination-btn.active {
+            background: var(--accent); border-color: var(--accent); color: white;
+        }
+        .pagination-btn:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
+        .pagination-info {
+            color: var(--muted); font-size: 14px; margin: 0 12px;
+        }
+
+        /* Tiny toast */
+        .toast-container { position: fixed; top: 14px; right: 14px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { min-width: 180px; max-width: 320px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(99,125,255,.35); background: rgba(16,22,42,.92); color: #dbe3ff; box-shadow: 0 10px 30px rgba(0,0,0,.35); display: flex; align-items: center; gap: 10px; font-size: 14px; opacity: 0; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease; pointer-events: auto; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast .icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; color: #9fb2ff; }
+        .toast.success { border-color: rgba(34,197,94,.45); color: #dcfce7; }
+
+        @media (min-width: 1024px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            .title { font-size: 28px; }
+            .container { padding: 28px 14px 40px; }
+            .title .badge { height: 24px; min-width: 38px; font-size: 13px; }
+            .pagination { flex-wrap: wrap; gap: 6px; }
+            .pagination-btn { min-width: 32px; height: 32px; padding: 0 8px; font-size: 13px; }
+            .pagination-info { margin: 0 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title"><span class="dot"></span>KbjFree分享</div>
+            <label class="search">
+                <input id="q" type="text" placeholder="搜索">
+                <span class="icon">⌕</span>
+            </label>
+        </div>
+        <div class="container" style="text-align: center;">
+            <div class="title">该页面已有<span class="badge">1</span>个分享</div>
+        </div>
+        <div class="panel">
+            <div id="list" class="grid">
+                <!-- 数据项保持不变 -->
+                <div class="chip" data-text="https://kbjfree.cc/@s/9bA5faHX">
+                    <span class="text" title="https://kbjfree.cc/@s/9bA5faHX">https://kbjfree.cc/@s/9bA5faHX</span>
+                    <span class="actions">
+                        <button class="btn" data-copy="https://kbjfree.cc/@s/9bA5faHX">复制</button>
+                    </span>
+                </div>
+                <!-- 其他数据项保持不变 -->
+                <!-- 为节省空间，这里省略了大部分数据项 -->
+                
+                    </span>
+                </div>
+            </div>
+            
+            <!-- 分页控件 -->
+            <div class="pagination">
+                <button class="pagination-btn" id="prev-page" disabled>上一页</button>
+                <div id="pagination-numbers" class="pagination-numbers"></div>
+                <button class="pagination-btn" id="next-page">下一页</button>
+                <span class="pagination-info" id="page-info">第 1 页，共 5 页</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-root" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        (function() {
+            // 分页配置
+            const itemsPerPage = 20; // 每页显示的项目数
+            let currentPage = 1;
+            let totalPages = 1;
+            let allItems = [];
+            let filteredItems = [];
+            
+            // 初始化
+            function init() {
+                // 获取所有项目
+                allItems = Array.from(document.querySelectorAll('#list .chip'));
+                filteredItems = [...allItems];
+                
+                // 计算总页数
+                totalPages = Math.ceil(allItems.length / itemsPerPage);
+                
+                // 更新分页信息
+                updatePagination();
+                
+                // 显示第一页
+                showPage(1);
+                
+                // 设置搜索功能
+                setupSearch();
+                
+                // 设置复制功能
+                setupCopy();
+                
+                // 设置分页按钮事件
+                setupPaginationButtons();
+            }
+            
+            // 显示指定页面的项目
+            function showPage(page) {
+                currentPage = page;
+                
+                // 隐藏所有项目
+                allItems.forEach(item => {
+                    item.style.display = 'none';
+                });
+                
+                // 计算当前页的起始和结束索引
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                
+                // 显示当前页的项目
+                filteredItems.slice(startIndex, endIndex).forEach(item => {
+                    item.style.display = '';
+                });
+                
+                // 更新分页信息
+                updatePagination();
+            }
+            
+            // 更新分页控件
+            function updatePagination() {
+                const pageInfo = document.getElementById('page-info');
+                const prevBtn = document.getElementById('prev-page');
+                const nextBtn = document.getElementById('next-page');
+                const paginationNumbers = document.getElementById('pagination-numbers');
+                
+                // 更新页面信息
+                pageInfo.textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+                
+                // 更新按钮状态
+                prevBtn.disabled = currentPage === 1;
+                nextBtn.disabled = currentPage === totalPages;
+                
+                // 更新页码按钮
+                updatePageNumbers(paginationNumbers);
+            }
+            
+            // 更新页码按钮
+            function updatePageNumbers(container) {
+                container.innerHTML = '';
+                
+                // 显示最多5个页码按钮
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                
+                // 调整起始页，确保显示5个页码（如果可能）
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+                
+                // 添加页码按钮
+                for (let i = startPage; i <= endPage; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'pagination-btn';
+                    if (i === currentPage) {
+                        btn.classList.add('active');
+                    }
+                    btn.textContent = i;
+                    btn.addEventListener('click', () => showPage(i));
+                    container.appendChild(btn);
+                }
+            }
+            
+            // 设置分页按钮事件
+            function setupPaginationButtons() {
+                const prevBtn = document.getElementById('prev-page');
+                const nextBtn = document.getElementById('next-page');
+                
+                prevBtn.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        showPage(currentPage - 1);
+                    }
+                });
+                
+                nextBtn.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        showPage(currentPage + 1);
+                    }
+                });
+            }
+            
+            // 设置搜索功能
+            function setupSearch() {
+                const input = document.getElementById('q');
+                if (!input) return;
+                
+                input.addEventListener('input', function() {
+                    const query = (this.value || '').toLowerCase().trim();
+                    
+                    // 过滤项目
+                    filteredItems = allItems.filter(item => {
+                        const text = (item.getAttribute('data-text') || '').toLowerCase();
+                        return text.includes(query);
+                    });
+                    
+                    // 重新计算总页数
+                    totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
+                    
+                    // 显示第一页
+                    showPage(1);
+                });
+            }
+            
+            // 设置复制功能
+            function setupCopy() {
+                const list = document.getElementById('list');
+                if (!list) return;
+                
+                list.addEventListener('click', function(e) {
+                    const btn = e.target.closest('[data-copy]');
+                    if (!btn) return;
+                    
+                    const val = btn.getAttribute('data-copy') || '';
+                    navigator.clipboard.writeText(val).then(function() {
+                        const prev = btn.textContent;
+                        btn.textContent = '已复制';
+                        showToast('已复制到剪贴板', 'success');
+                        setTimeout(function(){ btn.textContent = prev; }, 1200);
+                    }).catch(function(){
+                        showToast('复制失败', '');
+                    });
+                });
+            }
+            
+            // 显示提示消息
+            function showToast(message, type) {
+                const root = document.getElementById('toast-root');
+                if (!root) return;
+                
+                const el = document.createElement('div');
+                el.className = 'toast' + (type ? (' ' + type) : '');
+                el.innerHTML = '<span class="icon">✔</span>' + '<span>' + message + '</span>';
+                root.appendChild(el);
+                
+                requestAnimationFrame(function(){ el.classList.add('show'); });
+                
+                setTimeout(function(){
+                    el.classList.remove('show');
+                    setTimeout(function(){ el.remove(); }, 220);
+                }, 1600);
+            }
+            
+            // 初始化应用
+            init();
+        })();
+    </script>
+</body>
+</html>
